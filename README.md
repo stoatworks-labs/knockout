@@ -56,8 +56,9 @@ an outlined one has no stroke through the middle of its crossbar (`--overlap`).
 - **Font** lists the families on this machine when the plugin loads. A family picked from
   it is saved as a number made from its name, not its place in the list, so the
   composition finds the same family on a machine with a different set of fonts. On one
-  without it, the plugin draws its default, Arial Black, the list shows nothing picked, and
-  the composition keeps the choice for the next machine that has it.
+  without it, the plugin draws its default (Arial Black, or Arial where there's no Arial
+  Black), the list shows nothing picked, and the composition keeps the choice for the next
+  machine that has it.
 - **Font Name** is the same choice typed (any case), and it wins over the list. A name the
   machine hasn't got is kept as typed while the plugin draws the default, until you pick
   something else. Picking from the list fills it in for the plugin, but Arena never shows
@@ -99,8 +100,8 @@ lets you type one) and `\\` is a backslash. Up to 4096 characters are drawn.
 - **Mask:** Mask (*Inside*, *Outside*), Background (*Transparent*, *Black*, *White*,
   *Colour*), Colour, Mix (0 hands back the clip untouched, to the bit).
 
-The default is the word KNOCKOUT in Arial Black, filling the frame, with the clip showing
-through it on transparency.
+The default is the word KNOCKOUT in Arial Black (Arial, on a machine without it), filling
+the frame, with the clip showing through it on transparency.
 
 ## Status
 
@@ -172,8 +173,13 @@ this one stood in for it), and what it costs per frame inside Arena.
 
 ### On Windows
 
-Never built. The CMake, the font directories and GLEW from vcpkg are there for it, and
-that is all that can be said.
+Built by CI (windows-2022, MSVC, static GLEW from vcpkg) and loaded the way a host loads
+it (`tools/wincheck.ps1`), 2 November 2026: the DLL reports **SW Knockout** / `KO01` /
+effect with its 34 parameters, and its font scan lists the 76 families in the runner's
+`C:\Windows\Fonts`, each with its own value. Arial's is the number a Mac gives it, so a
+family picked on a Mac opens as the same family on a PC that has it. Nothing has drawn a
+pixel on Windows: the runner has no GL, and Knockout has never been in Resolume there. The
+runner has no family called Arial Black, so a PC like it starts on Arial instead.
 
 ### Known limits
 
@@ -232,6 +238,10 @@ their script, a fresh universal build with no warnings, the bundle through `lipo
 plist and oxbow, every check on this GPU and again on Apple's software renderer, this
 Mac's own fonts, the pipe, the negative controls, the mutants and the bench. `CLAUDE.md`
 lists what each check measures; `AGENTS.md` says why the plugin is built the way it is.
+
+CI (`.github/workflows/ci.yml`) runs on every pull request and every push to `main`: on
+macOS, `kotest --offline`, every pixel check on the software renderer and the shaders
+through `glslc`; on Windows, the build and `tools/wincheck.ps1`.
 
 ## License
 

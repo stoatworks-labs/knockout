@@ -128,6 +128,7 @@ there is no resolution to run out of: Zoom 1000 is the same shader on smaller nu
 ## Not done
 
 - Loaded into Arena on one Mac and driven over REST only (the README's Status says what was
-  checked). Never in Avenue, never played by hand, never built on Windows, and no CI yet.
+  checked). Never in Avenue, never played by hand. Windows is built and loaded by CI
+  (`tools/wincheck.ps1`) but has never drawn a pixel or been in Resolume.
 - Not in the backend's lists, so no generated `.github` files; no user guide, website
   listing, video or release.

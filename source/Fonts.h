@@ -53,9 +53,9 @@ int FindFamily( const std::string& name );
 /// The face of `family` nearest `weight` and `italic`, by CSS Fonts 4's
 /// matching rules (5.2, "font-weight"); -1 for no family.
 int MatchFace( int family, int weight, bool italic );
-/// The family a fresh instance starts on: Arial Black where it exists (it
-/// is on every Mac and every Windows), then Arial, Helvetica, then the
-/// first family. -1 when there are no fonts at all.
+/// The family a fresh instance starts on: Arial Black where it exists (on
+/// every Mac; not on GitHub's windows-2022 runner, which has Arial), then
+/// Arial, Helvetica, then the first family. -1 when there are no fonts.
 int DefaultFamily();
 
 /// What the Font list gives `family` as its element value, which is what a
