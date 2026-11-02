@@ -2218,6 +2218,11 @@ void checkReal( int flags )
 		}
 		Check( exact == static_cast< int >( families.size() ) && found == exact,
 		       fmt( "%zu list values, all exact in a float and each finding its own family; %d moved up past a clash", families.size(), moved ) );
+		//The numbers tools/wincheck.ps1 requires of a Windows build: a value
+		//is what a composition saves, so a Mac and a PC must agree on it.
+		//Arena saved Arial Black as 10146829 (2 November 2026).
+		const float arial = FamilyValue( FindFamily( "Arial" ) ), black = FamilyValue( FindFamily( "Arial Black" ) );
+		Check( arial == 6483289.0f && black == 10146829.0f, fmt( "Arial's value %.0f and Arial Black's %.0f, as wincheck.ps1 and Arena have them", arial, black ) );
 	}
 	//Its glyf is placeholder boxes; the pictures are sbix bitmaps.
 	if( std::FILE* emoji = std::fopen( "/System/Library/Fonts/Apple Color Emoji.ttc", "rb" ) )

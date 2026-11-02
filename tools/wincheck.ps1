@@ -10,9 +10,10 @@
     id and the type) and the parameters (their count and names) -- which the
     SDK answers from a prototype instance, so the constructor runs too, and
     with it the font scan of C:\Windows\Fonts. Then it reads the Font list as
-    a host does, element by element, and requires Arial Black's value to be
-    the one a Mac gives it: the value is what a composition saves, so a
-    family picked on one must be the same family on the other.
+    a host does, element by element, and requires Arial's value to be the one
+    a Mac gives it (kotest --real pins the same number): the value is what a
+    composition saves, so a family picked on one must be the same family on
+    the other.
 
     Adapted from isohypse's, without the worlds. CI runs it on the DLL it
     builds. The pixels are checked on a Mac (tools/verify.sh); a Windows
@@ -113,9 +114,14 @@ try
 finally { [Runtime.InteropServices.Marshal]::FreeHGlobal( $pair ) }
 $distinct = ( $listed.Values | Sort-Object -Unique ).Count
 Check ( $families -gt 1 -and $distinct -eq $families ) "the Font list: $families families from the font scan, each with its own value"
-# Arena on a Mac saved Arial Black as 10146829 (2 November 2026).
-$arialBlack = $listed[ 'Arial Black' ]
-Check ( $arialBlack -eq 10146829 ) "Arial Black's value $arialBlack, as on a Mac (10146829)"
+Write-Host "        $( ( $listed.Keys | Sort-Object ) -join ', ' )"
+# Arial is on every Mac and every Windows. kotest --real requires the same
+# number on a Mac, where Arena saved Arial Black as 10146829.
+$arial = $listed[ 'Arial' ]
+Check ( $arial -eq 6483289 ) "Arial's value $arial, as on a Mac (6483289)"
+# Not a failure: the first runner had no family of that name (2 November 2026).
+if( $listed.ContainsKey( 'Arial Black' ) ) { Check ( $listed[ 'Arial Black' ] -eq 10146829 ) "Arial Black's value $( $listed[ 'Arial Black' ] ), as on a Mac (10146829)" }
+else { Write-Host "  --    no family called Arial Black here" }
 
 if( $failures -gt 0 ) { Write-Host "`n  FAIL ($failures)"; exit 1 }
 Write-Host "`n  PASS"
