@@ -1,0 +1,129 @@
+name: ci
+
+# macOS and Windows. The CMakeLists branches on APPLE and WIN32 and has no
+# Linux path at all, so ubuntu is not an option.
+#
+# The macOS runner cannot be relied on for an accelerated GL context, so the
+# harness runs `kotest --offline` (every check that needs no GL) and the pixel
+# checks on Apple's software renderer when the runner has one. The shaders are
+# covered the other way too, by glslc. tools/verify.sh runs the lot, this
+# Mac's fonts, the negatives and the mutants included, on a Mac with a GPU.
+#
+# Windows builds the DLL, and tools/wincheck.ps1 loads it as a host would:
+# plugMain's info and parameters, and the Font list the constructor scanned
+# from C:\Windows\Fonts, whose values must be the ones a Mac gives the same
+# families. A GLEW-shaped or font-scan-shaped break is one macOS is
+# structurally blind to.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  macos:
+    name: macOS
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The FFGL SDK is a submodule. Without this CMake fails at configure
+          # time with a missing-directory error that reads like a broken repo.
+          submodules: recursive
+
+      - name: Configure
+        # arm64 only, unlike the release build's universal arm64;x86_64 -- the
+        # second slice doubles the build for no extra signal, because a source
+        # break is not architecture-specific.
+        run: >
+          cmake -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_OSX_ARCHITECTURES=arm64
+          -DKNOCKOUT_BUILD_TOOLS=ON
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Parameters
+        # No GL needed, so this one cannot be a runner problem.
+        run: ./build/kotest --list
+
+      - name: Offline checks
+        # Defined once, in kotest's main(); not listed here.
+        timeout-minutes: 15
+        run: ./build/kotest --offline
+
+      - name: Pixels on the software renderer
+        # The checks tools/verify.sh runs on the software renderer, on the
+        # harness's own fonts. A runner with no GL context at all is said so
+        # and skipped, never passed.
+        timeout-minutes: 30
+        shell: bash
+        run: |
+          failed=0
+          for check in coverage zoom edge overlap winding layout fit transform reveal composite state resize fonts text stb controls; do
+            set +e
+            out=$( KOTEST_RENDERER=software ./build/kotest --$check 2>&1 )
+            status=$?
+            set -e
+            case "$out" in
+              *"no GL 4.1 context"*) echo "::warning::no software GL context on this runner: the pixel checks were skipped"; exit 0 ;;
+            esac
+            if [ $status -eq 0 ]; then
+              echo "ok   --$check: $( printf '%s\n' "$out" | grep -c '^  ok' ) checks"
+            else
+              printf '%s\n' "$out" | tail -40
+              echo "::error::kotest --$check failed on the software renderer"
+              failed=1
+            fi
+          done
+          exit $failed
+
+      - name: Shaders compile
+        # The same script tools/verify.sh runs. GLSLC_REQUIRED: a runner
+        # without glslc must fail, not skip.
+        run: |
+          brew install shaderc
+          GLSLC_REQUIRED=1 tools/glslc.sh
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: knockout-macos-arm64
+          path: build/*.bundle
+          if-no-files-found: error
+
+  windows:
+    name: Windows
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Configure
+        # The toolchain path MUST stay double-quoted: a `run:` step on Windows
+        # is PowerShell, and unquoted this expands to nothing. Tools off: kotest
+        # links CGL and is macOS-only. Static GLEW, so the DLL needs nothing
+        # beside it.
+        run: >
+          cmake -B build -A x64
+          -DCMAKE_BUILD_TYPE=Release
+          -DKNOCKOUT_BUILD_TOOLS=OFF
+          -DVCPKG_APPLOCAL_DEPS=OFF
+          -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: The DLL, as a host sees it
+        # pwsh checks only the LAST exit code of a step: it is checked here.
+        run: |
+          ./tools/wincheck.ps1 -Dll "build/Release/Knockout.dll" -Name "SW Knockout" -Id KO01 -Kind effect -Params 34
+          if( $LASTEXITCODE ) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: knockout-windows-x86_64
+          path: build/Release/*.dll
+          if-no-files-found: error
