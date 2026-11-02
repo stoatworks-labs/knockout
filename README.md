@@ -4,7 +4,8 @@
 > (Anthropic), directed and reviewed by a human author. It has been **loaded into Resolume
 > Arena 7.28.1 on one Mac** and driven there over Arena's REST API rather than by hand:
 > every control changes Arena's output, Mix 0 hands back the clip to the bit, and a saved
-> composition reopens to the same picture, on this Mac's fonts and on a different set.
+> composition reopens to the same picture, on this Mac's fonts and on a different set. Its
+> Windows build has been through the fleet's Arena gate, on software rendering.
 > Everything else below is measured by an
 > offline harness that drives the real plugin class in a headless GL context on this Mac's
 > GPU. Every pixel of the mask agrees with the test font's own geometry **within 0.0005**,
@@ -105,7 +106,9 @@ the frame, with the clip showing through it on transparency.
 
 ## Status
 
-**v0.1.0, unreleased.**
+**v0.1.0**, the first release. Loaded into Resolume Arena on one Mac, and on Windows on
+software rendering; everything else is measured offline on one Mac. There's a
+[user guide](https://stoatworks-labs.com/software/knockout/guide/).
 
 ### Measured offline, on macOS
 
@@ -139,14 +142,14 @@ Cost on the same Mac, GPU finished: the defaults take 0.13 ms a frame at 1080p a
 at 4K; eight lines of 56 characters 0.29 ms and 0.77 ms; a word zoomed 1000× into a stroke
 0.46 ms and 1.73 ms (`kotest --system-fonts --bench`).
 
-### In Resolume
+### In Resolume Arena, on macOS
 
 Arena 7.28.1 (rev 26535) on the same Mac, 2 November 2026: Knockout as a layer effect over
 a 1920×1080 still, driven over Arena's REST API, with the composition's output read back as
 snapshots. Nobody sat at it and nothing was played to anybody.
 
 - Arena lists **SW Knockout** with its description and its 34 parameters (plus Arena's own
-  Opacity).
+  Opacity). The User guide button has made it 35 since.
 - **All 30 controls change Arena's output**, and each reads back the value it was given.
 - Background *Transparent* is alpha 0 in Arena's output. **Mix 0 is identical to the effect
   bypassed**, to the bit, with Mask *Inside* and *Outside*, each on *Transparent* and on
@@ -175,11 +178,27 @@ this one stood in for it), and what it costs per frame inside Arena.
 
 Built by CI (windows-2022, MSVC, static GLEW from vcpkg) and loaded the way a host loads
 it (`tools/wincheck.ps1`), 2 November 2026: the DLL reports **SW Knockout** / `KO01` /
-effect with its 34 parameters, and its font scan lists the 76 families in the runner's
+effect with its 35 parameters, and its font scan lists the 76 families in the runner's
 `C:\Windows\Fonts`, each with its own value. Arial's is the number a Mac gives it, so a
-family picked on a Mac opens as the same family on a PC that has it. Nothing has drawn a
-pixel on Windows: the runner has no GL, and Knockout has never been in Resolume there. The
-runner has no family called Arial Black, so a PC like it starts on Arial instead.
+family picked on a Mac opens as the same family on a PC that has it. The runner has no
+family called Arial Black, so a PC like it starts on Arial instead.
+
+The fleet's Arena gate (`arena/` in plugin-bench) then ran the release workflow's own Windows
+build in **Resolume Arena 7.27.1** on win-lab, a Windows VM with no GPU (Mesa's llvmpipe), the
+same day. The DLL loads and registers as `SW Knockout`, `KO01`, an effect; all 36 controls
+(Arena's Opacity and the plugin's 35) arrive with the names, order, types, ranges and defaults
+declared; it draws with a font loaded from a file (KaTeX Main, which win-lab hasn't got
+installed); and Arena's log stays clean: **10 passed, 0 failed, 0 skipped**. Against Arena's
+still test picture, 28 controls measurably changed the frame, which is every one that can be
+probed: Text, Font Name and the About block are strings, and Font File is a path. win-lab has
+no Arial Black either, and its Font list starts on Arial.
+
+The installer, built by release-lib's `--ffgl` from that DLL, was run there silently.
+`Knockout.dll` went into `Documents\Resolume Arena\Extra Effects`, its README, notices and
+uninstaller into a `Knockout` folder beside it, and its uninstall entry into the user's
+registry, not the machine's. Arena, restarted, listed SW Knockout; the uninstaller took all of
+it away again. Software rendering says nothing about a GPU or about speed, and nobody has sat
+at it on Windows.
 
 ### Known limits
 
