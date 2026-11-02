@@ -1,9 +1,10 @@
 # knockout
 
 > **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
-> (Anthropic), directed and reviewed by a human author. It has **not been loaded into
-> Resolume yet**. oxbow, the fleet's stand-in host, loads the universal bundle, reads it as
-> an effect and renders 120 frames through it. Everything else below is measured by an
+> (Anthropic), directed and reviewed by a human author. It has been **loaded into Resolume
+> Arena 7.28.1 on one Mac** and driven there over Arena's REST API rather than by hand:
+> every control changes Arena's output, Mix 0 hands back the clip to the bit, and a saved
+> composition reopens to the same picture. Everything else below is measured by an
 > offline harness that drives the real plugin class in a headless GL context on this Mac's
 > GPU. Every pixel of the mask agrees with the test font's own geometry **within 0.0005**,
 > curves and 40× zooms included. A stroke 1000× zoomed, on the sixteenth letter of a line,
@@ -52,10 +53,14 @@ an outlined one has no stroke through the middle of its crossbar (`--overlap`).
 ## Fonts
 
 - **Font** lists the families on this machine when the plugin loads; **Font Name** is the
-  same choice by name, and the name is what a composition remembers. Type a name and it
-  wins over the list (any case). Open a composition on a machine without that font and the
-  name is kept as typed while the plugin draws in its default, Arial Black, until you pick
-  something else.
+  same choice by name. Type a name and it wins over the list (any case).
+- **Type the name if the composition is going anywhere.** Arena saves a family picked from
+  the list as its position in this machine's list, and never sees the name the plugin fills
+  in for it. So a picked family comes back on this machine as it was, and on another one as
+  whichever family happens to sit at that position there (or here, once a font is installed
+  ahead of it). A typed name is saved as the name and wins. Open the composition on a
+  machine without that font and the name is kept as typed while the plugin draws in its
+  default, Arial Black, until you pick something else.
 - **Weight** and **Italic** pick a face from the family the way a browser does: the nearest
   weight it has (500 looks down before up, above 500 looks up first, below 400 looks down),
   and an italic before a weight.
@@ -134,7 +139,32 @@ at 4K; eight lines of 56 characters 0.29 ms and 0.77 ms; a word zoomed 1000× in
 
 ### In Resolume
 
-Not yet. Nothing above has run inside Arena or Avenue.
+Arena 7.28.1 (rev 26535) on the same Mac, 2 November 2026: Knockout as a layer effect over
+a 1920×1080 still, driven over Arena's REST API, with the composition's output read back as
+snapshots. Nobody sat at it and nothing was played to anybody.
+
+- Arena lists **SW Knockout** with its description and its 34 parameters (plus Arena's own
+  Opacity).
+- **All 30 controls change Arena's output**, and each reads back the value it was given.
+- Background *Transparent* is alpha 0 in Arena's output. **Mix 0 is identical to the effect
+  bypassed**, to the bit, with Mask *Inside* and *Outside*, each on *Transparent* and on
+  *Colour*.
+- **Save, new, open:** the settings and the picture come back bit for bit, both for a family
+  picked from the list (Didot Italic) and for a typed Font Name (Futura Bold Italic,
+  *Outside*, on *Colour*). That was the same machine; see Fonts for why a picked family
+  needn't survive a different one.
+
+Two things Arena does that you'd want to know before a show:
+
+- **A picked font is saved as a list position**, not a name. Type it into Font Name (see
+  Fonts).
+- **A clip smaller than the composition** reaches a layer effect inset in a
+  composition-sized frame, so the text fills the composition and only the letters over the
+  picture have anything to show: a 1280×720 clip in a 1080p composition loses the K and the
+  T. Set the clip's Resize to *Fill* and the clip is the whole frame.
+
+Not tried: Avenue, Knockout as a clip effect, a composition opened on another machine, and
+what it costs per frame inside Arena.
 
 ### On Windows
 
@@ -151,6 +181,8 @@ that is all that can be said.
   a letter filling a 4K frame. Zoom multiplies it, so at Zoom 1000 a CFF curve can sit
   tens of pixels off the designer's. It's still a smooth curve; it's just not quite theirs.
   TrueType fonts are quadratics already and have no such error.
+- **A family picked from the list doesn't travel** in Arena, which saves its position, not
+  its name (see Fonts). Type the name.
 - **A face is read once per load.** Install a font while Resolume is running and it
   appears in the list next time the plugin loads; Font File reaches it in the meantime.
 

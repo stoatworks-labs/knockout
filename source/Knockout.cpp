@@ -124,8 +124,8 @@ KnockoutPlugin::KnockoutPlugin()
 			break;
 		case PT_FONT:
 			//The dropdown is this machine's families, so an index means a
-			//different face on the next rig: Font Name carries the family
-			//with the composition, and wins (see resolveFont).
+			//different face on the next rig. A typed Font Name carries the
+			//family with the composition, and wins (see resolveFont).
 			if( families.empty() )
 				option( id, 1, []( int ) { return "None"; } );
 			else
@@ -296,9 +296,11 @@ void KnockoutPlugin::resolveFont()
 		if( loaded && family >= 0 )
 		{
 			params[ PT_FONT ] = static_cast< float >( family );
-			//The field shows the family in use, so a saved composition carries
-			//it -- except a typed name that was not found, kept as typed so the
-			//same composition finds it on a machine that has it.
+			//The field shows the family in use -- to us. Arena keeps its own
+			//copy and saves that, so a family picked from the list goes into a
+			//composition as an index only. A typed name that was not found is
+			//kept as typed so the same composition finds it on a machine that
+			//has it.
 			if( !typedMissing )
 			{
 				std::lock_guard< std::mutex > lock( textMutex );

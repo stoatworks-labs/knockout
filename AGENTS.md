@@ -73,6 +73,12 @@ there is no resolution to run out of: Zoom 1000 is the same shader on smaller nu
   wins over the list; moving the list alone writes the family into Font Name; a typed name
   that isn't installed is kept as typed and the default drawn. A composition restore sets
   both, and the name wins (`--fonts`).
+- **The host never learns the name the list writes.** Arena 7.28.1 keeps its own copy of
+  Font Name and saves that, so a family picked from the list is saved as `Font` = its index
+  and no name at all (read from a saved `.avc`, 2 November 2026). Resolume ignores
+  `FF_EVENT_FLAG_VALUE` (afterglow's AGENTS.md), so raising one changes nothing. Only a
+  typed name travels; the README says so. Don't claim otherwise without watching a
+  composition move between two machines.
 - **Left out of the list:** families whose names start with "." (Apple's mark for faces
   apps shouldn't list; Font File reaches them), faces whose glyphs are bitmaps (`sbix`,
   `CBDT`: Apple Color Emoji's `glyf` is placeholder boxes), and CFF2, which stb_truetype
