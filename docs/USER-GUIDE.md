@@ -57,7 +57,9 @@ Avenue uses the same layout under its own folder name. The effect then shows up 
 browser as **SW Knockout**.
 
 The macOS download is a universal build (Apple silicon and Intel), as a `.dmg` or a `.zip`. It's
-**Developer ID-signed and notarised**, so the bundle just loads. The Windows download is an x64
+**Developer ID-signed and notarised** by the release pipeline after publication, so the bundle
+just loads. If macOS refuses a download, it's from before the signing, so download it again. The
+Windows download is an x64
 installer or a `.zip`. The installer is for you alone, so it asks for no administrator password,
 and it starts on Arena's Extra Effects folder (Avenue's, if only Avenue is there); its folder page
 names both, if you want the other. `Knockout.dll` goes in that folder, and its README, notices and
