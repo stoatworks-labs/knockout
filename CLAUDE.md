@@ -65,9 +65,10 @@ the cubic tolerance, or the order of the parameters (hosts store them by index).
   parses the outlines and kerning of the one face in use. `KNOCKOUT_FONT_DIR` replaces the
   OS font directories (the harness points it at `tools/fixtures`).
 - All host parameters are 0..1 and mapped in `Controls.cpp`; options hold the element
-  index. Font is the family list at load time, so Font Name is what identifies a choice --
-  but only a TYPED one reaches a composition: Arena 7.28.1 saves Font as the index and never
-  reads back the Font Name the plugin fills in (Resolume ignores `FF_EVENT_FLAG_VALUE`).
+  index -- except Font, whose elements hold `FamilyValue` (a hash of the family's name).
+  Arena saves an option's element value and never reads back the Font Name the plugin fills
+  in (Resolume ignores `FF_EVENT_FLAG_VALUE`), so that value is what carries a picked family
+  to another machine. Never give the Font list positions as values again.
 - GLSL reserved words (`patch sample input output filter common active half layout flat
   packed smooth`, `noise1`–`noise4`) must not be identifiers; `verify.sh` greps for them.
   Every shader piece stays under 15 000 bytes (MSVC C2026).

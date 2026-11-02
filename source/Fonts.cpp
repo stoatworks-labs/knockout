@@ -2,9 +2,11 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <unordered_set>
 
 #include "Diag.h"
 
@@ -490,6 +492,54 @@ int DefaultFamily()
 			return found;
 	}
 	return InstalledFamilies().empty() ? -1 : 0;
+}
+
+std::vector< uint32_t > FamilyValues( const std::vector< std::string >& names )
+{
+	std::vector< uint32_t > values;
+	std::unordered_set< uint32_t > taken;
+	for( const std::string& name : names )
+	{
+		uint32_t hash = 2166136261u;
+		for( char c : Lowered( name ) )
+			hash = ( hash ^ static_cast< unsigned char >( c ) ) * 16777619u;
+		uint32_t value = ( ( hash >> 24 ) ^ hash ) & 0xFFFFFFu;
+		while( !taken.insert( value ).second )
+			value = ( value + 1 ) & 0xFFFFFFu;
+		values.push_back( value );
+	}
+	return values;
+}
+
+static const std::vector< uint32_t >& InstalledValues()
+{
+	static const std::vector< uint32_t > values = [] {
+		std::vector< std::string > names;
+		for( const FontFamily& family : InstalledFamilies() )
+			names.push_back( family.name );
+		return FamilyValues( names );
+	}();
+	return values;
+}
+
+float FamilyValue( int family )
+{
+	const std::vector< uint32_t >& values = InstalledValues();
+	if( family < 0 || family >= static_cast< int >( values.size() ) )
+		return 0.0f;
+	return static_cast< float >( values[ static_cast< size_t >( family ) ] );
+}
+
+int FamilyOfValue( float value )
+{
+	if( !( value >= 0.0f ) )
+		return -1;
+	const long wanted                     = std::lround( value );
+	const std::vector< uint32_t >& values = InstalledValues();
+	for( size_t i = 0; i < values.size(); ++i )
+		if( static_cast< long >( values[ i ] ) == wanted )
+			return static_cast< int >( i );
+	return -1;
 }
 
 bool DescribeFace( const std::string& path, int collectionIndex, FontFace& into )

@@ -421,14 +421,24 @@ std::vector< NamedParameter > listParameters( KnockoutPlugin& plugin )
 	return list;
 }
 
+/// What a host sets an option to when its element `e` is chosen.
+float elementValue( KnockoutPlugin& plugin, unsigned int index, unsigned int e )
+{
+	const FFMixed bits = plugin.GetParamElementDefault( index, e );
+	float value        = 0.0f;
+	std::memcpy( &value, &bits.UIntValue, sizeof value );
+	return value;
+}
+
 bool isTextType( unsigned int type )
 {
 	return type == FF_TYPE_TEXT || type == FF_TYPE_FILE;
 }
 
 /// `Name=Value`. A text or file parameter takes the value as it is; an
-/// option its element's name or its index; anything else must be wholly a
-/// number (polyhedral's trap: strtof( "Fixed" ) is 0, silently).
+/// option its element's name (and gets that element's value, as a host
+/// does) or a value; anything else must be wholly a number (polyhedral's
+/// trap: strtof( "Fixed" ) is 0, silently).
 bool applySetting( KnockoutPlugin& plugin, const std::string& assignment, std::string& error )
 {
 	const size_t equals = assignment.find( '=' );
@@ -450,7 +460,7 @@ bool applySetting( KnockoutPlugin& plugin, const std::string& assignment, std::s
 				for( unsigned int e = 0; e < count; ++e )
 					if( value == plugin.GetParamElementName( parameter.index, e ) )
 					{
-						plugin.SetFloatParameter( parameter.index, static_cast< float >( e ) );
+						plugin.SetFloatParameter( parameter.index, elementValue( plugin, parameter.index, e ) );
 						return true;
 					}
 			}
@@ -1830,6 +1840,35 @@ void checkResize( int flags )
 	}
 }
 
+/// The Font list's element values: what a host saves for a picked family,
+/// so they must follow the name, not the position.
+void checkListValues( int flags )
+{
+	const std::vector< FontFamily >& families = InstalledFamilies();
+	Rig rig;
+	if( !rig.Init( 64, 64, nullptr, flags ) )
+		return Check( false, "init" );
+	const unsigned int count = rig.plugin.GetNumParamElements( PT_FONT );
+	bool byName = count == families.size(), roundTrip = true;
+	std::string listed;
+	for( unsigned int e = 0; e < count && e < families.size(); ++e )
+	{
+		const float value = elementValue( rig.plugin, PT_FONT, e );
+		byName            = byName && value == static_cast< float >( FamilyValues( { families[ e ].name } )[ 0 ] );
+		roundTrip         = roundTrip && FamilyOfValue( value ) == static_cast< int >( e ) && FamilyValue( static_cast< int >( e ) ) == value;
+		listed += fmt( "%s%s = %.0f", listed.empty() ? "" : ", ", families[ e ].name.c_str(), value );
+	}
+	Check( byName && roundTrip, "each family's list value is its name's, not its position (" + listed + ")" );
+	const std::vector< uint32_t > alone = FamilyValues( { "Knockout Twin" } );
+	const std::vector< uint32_t > third = FamilyValues( { "Aardvark", "Bodoni", "Knockout Twin" } );
+	const std::vector< uint32_t > cased = FamilyValues( { "knockout twin" } );
+	Check( alone[ 0 ] == third[ 2 ] && alone[ 0 ] == cased[ 0 ], fmt( "the same name, first or third or lower-case: %u, %u, %u", alone[ 0 ], third[ 2 ], cased[ 0 ] ) );
+	const std::vector< uint32_t > clash = FamilyValues( { "Twin", "twin", "TWIN" } );
+	Check( clash[ 1 ] == clash[ 0 ] + 1 && clash[ 2 ] == clash[ 0 ] + 2, fmt( "a value already taken moves up one: %u, %u, %u", clash[ 0 ], clash[ 1 ], clash[ 2 ] ) );
+	Check( FamilyOfValue( static_cast< float >( FamilyValues( { "Didot" } )[ 0 ] ) ) < 0 && FamilyOfValue( -1.0f ) < 0,
+	       "a value no family here has finds nothing" );
+}
+
 /// --fonts: the Font list, Weight and Italic, Font Name, Font File.
 void checkFonts( int flags )
 {
@@ -1841,6 +1880,7 @@ void checkFonts( int flags )
 	Check( families.size() == 2 && families[ 0 ].name == "Knockout Test" && families[ 0 ].faces.size() == 3 && families[ 1 ].name == "Knockout Twin",
 	       "the fixtures' two families: " + names );
 	Check( DefaultFamily() == 0, "with no Arial, the first family is the default" );
+	checkListValues( flags );
 
 	struct Case
 	{
@@ -1861,8 +1901,12 @@ void checkFonts( int flags )
 		{ "Italic", { "Weight=Regular", "Italic=1" }, "italic", 400, true, "Knockout Test" },
 		{ "Bold Italic finds the Italic (style before weight)", { "Weight=Bold", "Italic=1" }, "italic", 400, true, "Knockout Test" },
 		{ "Font Name, any case, wins", { "Font Name=knockout twin" }, "twin", 400, false, "Knockout Twin" },
-		{ "Font moved alone picks by index", { "Font=1" }, "twin", 400, false, "Knockout Twin" },
-		{ "a composition's restore: the name wins over the index", { "Font=1", "Font Name=Knockout Test" }, "regular", 400, false, "Knockout Test" },
+		{ "Font moved alone picks from the list", { "Font=Knockout Twin" }, "twin", 400, false, "Knockout Twin" },
+		{ "a composition's restore: the name wins over the list", { "Font=Knockout Twin", "Font Name=Knockout Test" }, "regular", 400, false, "Knockout Test" },
+		{ "a list value saved on a machine with Twin listed third", { "Font=" + std::to_string( FamilyValues( { "Aardvark", "Knockout Test", "Knockout Twin" } )[ 2 ] ) },
+		  "twin", 400, false, "Knockout Twin" },
+		{ "a list value from a machine with Didot: the default", { "Weight=Regular", "Font=" + std::to_string( FamilyValues( { "Didot" } )[ 0 ] ) },
+		  "regular", 400, false, "Knockout Test" },
 		{ "a name not installed is kept as typed", { "Weight=Regular", "Font Name=Nonexistent Sans" }, "regular", 400, false, "Nonexistent Sans" },
 		{ "Font File beats the list", { "Weight=Regular", "Font Name=Knockout Twin", "Font File=" + bold }, "bold", 700, false, "Knockout Twin" },
 		{ "a Font File that is not a font falls back", { "Weight=Regular", "Font File=" + std::string( KNOCKOUT_FIXTURES ) + "/../make-test-font.py" }, "regular", 400, false, "Knockout Test" },
@@ -2075,7 +2119,7 @@ void checkControls( int flags )
 	const std::string bold = std::string( KNOCKOUT_FIXTURES ) + "/KnockoutTest-Bold.ttf";
 	const std::vector< Probe > probes = {
 		{ PT_TEXT, {}, "Text=HOX", "Text=XOH" },
-		{ PT_FONT, {}, "Font=0", "Font=1" },
+		{ PT_FONT, {}, "Font=Knockout Test", "Font=Knockout Twin" },
 		{ PT_FONT_NAME, {}, "Font Name=Knockout Test", "Font Name=Knockout Twin" },
 		{ PT_FONT_FILE, { "Weight=Regular" }, "Font File=", "Font File=" + bold },
 		{ PT_WEIGHT, {}, "Weight=Regular", "Weight=Bold" },
@@ -2157,6 +2201,23 @@ void checkReal( int flags )
 		rig.Render( 1 );
 		const FrameState& f = rig.plugin.LastFrame();
 		Check( f.family == "Arial Black" || f.family == "Arial", fmt( "a fresh instance: %s %s %d, %d glyphs", f.family.c_str(), f.style.c_str(), f.weight, f.glyphs ) );
+	}
+	{
+		//Every value under 2^24 is exact in a float; count the families
+		//whose name's value was taken and that moved up.
+		std::vector< std::string > names;
+		for( const FontFamily& family : families )
+			names.push_back( family.name );
+		const std::vector< uint32_t > values = FamilyValues( names );
+		int moved = 0, exact = 0, found = 0;
+		for( size_t i = 0; i < families.size(); ++i )
+		{
+			moved += values[ i ] != FamilyValues( { names[ i ] } )[ 0 ];
+			exact += values[ i ] < ( 1u << 24 ) && static_cast< uint32_t >( static_cast< float >( values[ i ] ) ) == values[ i ];
+			found += FamilyOfValue( FamilyValue( static_cast< int >( i ) ) ) == static_cast< int >( i );
+		}
+		Check( exact == static_cast< int >( families.size() ) && found == exact,
+		       fmt( "%zu list values, all exact in a float and each finding its own family; %d moved up past a clash", families.size(), moved ) );
 	}
 	//Its glyf is placeholder boxes; the pictures are sbix bitmaps.
 	if( std::FILE* emoji = std::fopen( "/System/Library/Fonts/Apple Color Emoji.ttc", "rb" ) )

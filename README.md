@@ -4,7 +4,8 @@
 > (Anthropic), directed and reviewed by a human author. It has been **loaded into Resolume
 > Arena 7.28.1 on one Mac** and driven there over Arena's REST API rather than by hand:
 > every control changes Arena's output, Mix 0 hands back the clip to the bit, and a saved
-> composition reopens to the same picture. Everything else below is measured by an
+> composition reopens to the same picture, on this Mac's fonts and on a different set.
+> Everything else below is measured by an
 > offline harness that drives the real plugin class in a headless GL context on this Mac's
 > GPU. Every pixel of the mask agrees with the test font's own geometry **within 0.0005**,
 > curves and 40× zooms included. A stroke 1000× zoomed, on the sixteenth letter of a line,
@@ -52,15 +53,15 @@ an outlined one has no stroke through the middle of its crossbar (`--overlap`).
 
 ## Fonts
 
-- **Font** lists the families on this machine when the plugin loads; **Font Name** is the
-  same choice by name. Type a name and it wins over the list (any case).
-- **Type the name if the composition is going anywhere.** Arena saves a family picked from
-  the list as its position in this machine's list, and never sees the name the plugin fills
-  in for it. So a picked family comes back on this machine as it was, and on another one as
-  whichever family happens to sit at that position there (or here, once a font is installed
-  ahead of it). A typed name is saved as the name and wins. Open the composition on a
-  machine without that font and the name is kept as typed while the plugin draws in its
-  default, Arial Black, until you pick something else.
+- **Font** lists the families on this machine when the plugin loads. A family picked from
+  it is saved as a number made from its name, not its place in the list, so the
+  composition finds the same family on a machine with a different set of fonts. On one
+  without it, the plugin draws its default, Arial Black, the list shows nothing picked, and
+  the composition keeps the choice for the next machine that has it.
+- **Font Name** is the same choice typed (any case), and it wins over the list. A name the
+  machine hasn't got is kept as typed while the plugin draws the default, until you pick
+  something else. Picking from the list fills it in for the plugin, but Arena never shows
+  that, so in Arena the field stays as you left it.
 - **Weight** and **Italic** pick a face from the family the way a browser does: the nearest
   weight it has (500 looks down before up, above 500 looks up first, below 400 looks down),
   and an italic before a weight.
@@ -122,11 +123,11 @@ quadratics. What they establish:
 | `--layout`, `--fit`, `--transform` | advances, kerning, tracking, three alignments to **0** font units; each Fit to **0.02 px**; Position, Rotation and Zoom to **0.01 px** and **0.05°** |
 | `--reveal` | all four orders at three Spreads: each letter's alpha exactly as the formula, the picture within **0.0005**; Random the same order in every instance |
 | `--composite` | Inside and Outside on each Background, at Mix 1, ½ and 0, within **6e-8**; Mix 0 the clip bit for bit |
-| `--fonts`, `--text` | weight matching, italic, Font Name over the list, Font File over both, a missing name kept; escapes, empty text, 5000 characters |
+| `--fonts`, `--text` | weight matching, italic, Font Name over the list, Font File over both, a missing name kept; the list's values follow each family's name, not its position, and a value from another machine finds its family or the default; escapes, empty text, 5000 characters |
 | `--stb` | the test fonts against stb_truetype's rasteriser: no pixel in on one side and out on the other, area within **0.013%** |
 | `--state`, `--resize` | the host's GL state comes back as it went in; a new raster under a running instance |
 | `--controls` | all **30** controls change the picture |
-| `--real` | this Mac's fonts: Arial Black, Helvetica, STIXGeneral (CFF) upright and italic, the system font and New York (both variable, with 43 and 32 overlapping pieces) against stb_truetype at 720p: no hard disagreement, area within **0.1%** |
+| `--real` | this Mac's fonts: Arial Black, Helvetica, STIXGeneral (CFF) upright and italic, the system font and New York (both variable, with 43 and 32 overlapping pieces) against stb_truetype at 720p: no hard disagreement, area within **0.1%**; all 335 families' list values exact in a float, no two alike |
 | `--negative` | **8** deliberately wrong models (even-odd fill, distance to every piece, a two-pixel ramp, no kerning, Grow inverted, overlaps left in, the centre in float, the harness's own rotation backwards), **8** caught |
 | mutation | **23** one-character mutants of the shipped GLSL and C++, **23** caught |
 | shaders | all 4 compile through `glslc`, not merely through Apple's driver |
@@ -151,20 +152,23 @@ snapshots. Nobody sat at it and nothing was played to anybody.
   *Colour*.
 - **Save, new, open:** the settings and the picture come back bit for bit, both for a family
   picked from the list (Didot Italic) and for a typed Font Name (Futura Bold Italic,
-  *Outside*, on *Colour*). That was the same machine; see Fonts for why a picked family
-  needn't survive a different one.
+  *Outside*, on *Colour*).
+- **On another machine's fonts:** Arena relaunched with the plugin reading a folder of six
+  families (`KNOCKOUT_FONT_DIR`) in place of this Mac's 335. Didot Italic, picked from the
+  list where it was 56th, came back as Didot Italic, fourth in the short list, the picture
+  identical to the bit. Copperplate, which the folder hasn't got, drew Arial Black with a
+  warning in the log; Arena's list showed nothing picked, and saving the composition again
+  kept Copperplate's value.
 
-Two things Arena does that you'd want to know before a show:
+One thing Arena does that you'd want to know before a show:
 
-- **A picked font is saved as a list position**, not a name. Type it into Font Name (see
-  Fonts).
 - **A clip smaller than the composition** reaches a layer effect inset in a
   composition-sized frame, so the text fills the composition and only the letters over the
   picture have anything to show: a 1280×720 clip in a 1080p composition loses the K and the
   T. Set the clip's Resize to *Fill* and the clip is the whole frame.
 
-Not tried: Avenue, Knockout as a clip effect, a composition opened on another machine, and
-what it costs per frame inside Arena.
+Not tried: Avenue, Knockout as a clip effect, a second real Mac (a different font folder on
+this one stood in for it), and what it costs per frame inside Arena.
 
 ### On Windows
 
@@ -181,8 +185,9 @@ that is all that can be said.
   a letter filling a 4K frame. Zoom multiplies it, so at Zoom 1000 a CFF curve can sit
   tens of pixels off the designer's. It's still a smooth curve; it's just not quite theirs.
   TrueType fonts are quadratics already and have no such error.
-- **A family picked from the list doesn't travel** in Arena, which saves its position, not
-  its name (see Fonts). Type the name.
+- **Two family names can, rarely, share a list value.** The second of the pair then takes
+  the next number up, so it travels only to machines that have both. With 335 families, as
+  here, about one machine in 300 has such a pair; this one has none (`--real` counts them).
 - **A face is read once per load.** Install a font while Resolume is running and it
   appears in the list next time the plugin loads; Font File reaches it in the meantime.
 

@@ -68,17 +68,20 @@ there is no resolution to run out of: Zoom 1000 is the same shader on smaller nu
   Outline only; one ramp for everything was kept, and the behaviour is measured
   (`--edge`) and in the README's limits.
 - **Choosing a face** is CSS Fonts 4 §5.2: the family, then style, then the nearest weight.
-  The Font list is whatever families this machine has when the plugin loads, so its index
-  means nothing on another machine. **Font Name is the identity**: setting it (any case)
-  wins over the list; moving the list alone writes the family into Font Name; a typed name
-  that isn't installed is kept as typed and the default drawn. A composition restore sets
-  both, and the name wins (`--fonts`).
-- **The host never learns the name the list writes.** Arena 7.28.1 keeps its own copy of
-  Font Name and saves that, so a family picked from the list is saved as `Font` = its index
-  and no name at all (read from a saved `.avc`, 2 November 2026). Resolume ignores
-  `FF_EVENT_FLAG_VALUE` (afterglow's AGENTS.md), so raising one changes nothing. Only a
-  typed name travels; the README says so. Don't claim otherwise without watching a
-  composition move between two machines.
+  The Font list is whatever families this machine has when the plugin loads, so a position
+  in it means nothing on another machine (see the next point). **Font Name wins**: setting
+  it (any case) beats the list; moving the list alone writes the family into Font Name; a
+  typed name that isn't installed is kept as typed and the default drawn. A composition
+  restore sets both, and the name wins (`--fonts`).
+- **The Font list's element values are `FamilyValue`, never positions.** Arena 7.28.1 saves
+  an option as its element value (`<ParamChoice name="Font" value="3837474">` is Didot) and
+  never reads back a Font Name the plugin fills in: it keeps its own copy, and Resolume
+  ignores `FF_EVENT_FLAG_VALUE` (afterglow's AGENTS.md). With positions as values, a picked
+  family reopened as whatever sat at that position elsewhere. The value is FNV-1a of the
+  lowered name folded to 24 bits (exact in a float); a taken value moves up one, so only a
+  clashing pair depends on what else is installed. Checked in Arena on 2 November 2026 by
+  reopening on a six-family `KNOCKOUT_FONT_DIR`: Didot came back; a missing Copperplate drew
+  the default, and Arena kept its value through a re-save.
 - **Left out of the list:** families whose names start with "." (Apple's mark for faces
   apps shouldn't list; Font File reaches them), faces whose glyphs are bitmaps (`sbix`,
   `CBDT`: Apple Color Emoji's `glyf` is placeholder boxes), and CFF2, which stb_truetype

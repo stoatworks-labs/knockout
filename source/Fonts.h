@@ -58,6 +58,21 @@ int MatchFace( int family, int weight, bool italic );
 /// first family. -1 when there are no fonts at all.
 int DefaultFamily();
 
+/// What the Font list gives `family` as its element value, which is what a
+/// host saves. A position in this machine's list means another family on the
+/// next, so the value comes from the name: the same family gets the same
+/// value whatever else is installed. 0 for no family.
+float FamilyValue( int family );
+/// The installed family whose FamilyValue is `value`, or -1: a composition
+/// saved with a family this machine does not have.
+int FamilyOfValue( float value );
+/// FamilyValue's arithmetic for any list of names in list order, exposed for
+/// the harness. FNV-1a over the lowered name folded to 24 bits, so a float
+/// holds it exactly; a name whose value is taken moves up by one, so only two
+/// colliding names depend on order (335 families, as on the Mac this was
+/// built on, give a pair about one machine in 300; that Mac has none).
+std::vector< uint32_t > FamilyValues( const std::vector< std::string >& names );
+
 /// CSS's nearest-weight order, for the harness: which of `available` CSS
 /// would pick for `wanted`. Exposed so it can be checked against the
 /// specification's own examples.

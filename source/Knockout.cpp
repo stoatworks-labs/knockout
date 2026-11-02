@@ -82,7 +82,7 @@ KnockoutPlugin::KnockoutPlugin()
 	//-------------------------------------------------------------------
 	const std::vector< FontFamily >& families = InstalledFamilies();
 	const int family                          = DefaultFamily();
-	params[ PT_FONT ]          = static_cast< float >( std::max( family, 0 ) );
+	params[ PT_FONT ]          = FamilyValue( family );
 	params[ PT_WEIGHT ]        = static_cast< float >( kWeightCount - 1 );
 	params[ PT_ITALIC ]        = 0.0f;
 	params[ PT_FIT ]           = static_cast< float >( Fit::Frame );
@@ -123,14 +123,18 @@ KnockoutPlugin::KnockoutPlugin()
 			SetParamInfo( id, NameOf( id ), FF_TYPE_TEXT, "KNOCKOUT" );
 			break;
 		case PT_FONT:
-			//The dropdown is this machine's families, so an index means a
-			//different face on the next rig. A typed Font Name carries the
-			//family with the composition, and wins (see resolveFont).
+			//The dropdown is this machine's families, so its elements carry
+			//FamilyValue, not their position: the host saves the value, and
+			//a position is a different family on the next rig. The host never
+			//reads back the Font Name we fill in, so this is what travels.
 			if( families.empty() )
 				option( id, 1, []( int ) { return "None"; } );
 			else
-				option( id, static_cast< int >( families.size() ),
-				        [ &families ]( int i ) { return families[ static_cast< size_t >( i ) ].name.c_str(); } );
+			{
+				SetOptionParamInfo( id, NameOf( id ), static_cast< unsigned int >( families.size() ), params[ id ] );
+				for( size_t i = 0; i < families.size(); ++i )
+					SetParamElementInfo( id, static_cast< unsigned int >( i ), families[ i ].name.c_str(), FamilyValue( static_cast< int >( i ) ) );
+			}
 			break;
 		case PT_FONT_NAME:
 			SetParamInfo( id, NameOf( id ), FF_TYPE_TEXT, "" );
@@ -246,7 +250,6 @@ void KnockoutPlugin::resolveFont()
 	}
 	const std::vector< FontFamily >& families = InstalledFamilies();
 	const std::vector< FontFace >& faces      = InstalledFaces();
-	const int count                           = std::max( 1, static_cast< int >( families.size() ) );
 	const int weight                          = WeightOf( OptionIndex( params[ PT_WEIGHT ], kWeightCount ) );
 	const bool italic                         = params[ PT_ITALIC ] > 0.5f;
 
@@ -261,14 +264,13 @@ void KnockoutPlugin::resolveFont()
 	}
 	if( !loaded )
 	{
-		//The dropdown stores an INDEX into this machine's families, Font Name
-		//the family. A composition restores both before the next frame, and
-		//then the name wins: index 47 is a different font on the next rig.
-		//Only the dropdown moving on its own picks by index.
+		//The dropdown holds a family's FamilyValue, Font Name the family as
+		//typed. A composition restores both before the next frame, and a
+		//typed name wins. Only the dropdown moving on its own picks from it.
 		int family        = -1;
 		bool typedMissing = false;
 		if( indexMoved && !nameSet )
-			family = OptionIndex( params[ PT_FONT ], count );
+			family = FamilyOfValue( params[ PT_FONT ] );
 		else
 		{
 			family = FindFamily( name );
@@ -278,9 +280,11 @@ void KnockoutPlugin::resolveFont()
 				diag::warn( "font '" + name + "' is not installed here; using the Font list" );
 			}
 			if( family < 0 )
-				family = OptionIndex( params[ PT_FONT ], count );
+				family = FamilyOfValue( params[ PT_FONT ] );
 		}
-		if( family >= static_cast< int >( families.size() ) )
+		if( family < 0 && !families.empty() && !typedMissing )
+			diag::warn( "the Font list's value " + std::to_string( std::lround( params[ PT_FONT ] ) ) + " is no family installed here; using the default" );
+		if( family < 0 || family >= static_cast< int >( families.size() ) )
 			family = DefaultFamily();
 		for( int attempt = 0; attempt < 2 && !loaded && family >= 0; ++attempt )
 		{
@@ -295,12 +299,11 @@ void KnockoutPlugin::resolveFont()
 		}
 		if( loaded && family >= 0 )
 		{
-			params[ PT_FONT ] = static_cast< float >( family );
+			params[ PT_FONT ] = FamilyValue( family );
 			//The field shows the family in use -- to us. Arena keeps its own
-			//copy and saves that, so a family picked from the list goes into a
-			//composition as an index only. A typed name that was not found is
-			//kept as typed so the same composition finds it on a machine that
-			//has it.
+			//copy and saves that, so a family picked from the list travels as
+			//its FamilyValue alone. A typed name that was not found is kept as
+			//typed so the same composition finds it on a machine that has it.
 			if( !typedMissing )
 			{
 				std::lock_guard< std::mutex > lock( textMutex );
