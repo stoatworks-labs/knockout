@@ -63,6 +63,7 @@ echo "   none"
 step "Shaders"
 #---------------------------------------------------------------------------
 tools/glslc.sh || fail "a shader does not compile"
+python3 demo/tools/check_shaders.py || fail "the browser demo's copies have drifted from the plugin's (demo/tools/check_shaders.py)"
 
 #---------------------------------------------------------------------------
 step "Test fonts"

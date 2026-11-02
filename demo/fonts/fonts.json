@@ -1,0 +1,98 @@
+{
+  "note": "The page's only fonts: the browser cannot list the visitor's own, so these are written into the WebAssembly module's in-memory file system and found by the plugin's own scan (KNOCKOUT_FONT_DIR). Each is unmodified, from the google/fonts repository, under the SIL Open Font License 1.1, which allows redistribution with software provided each copy carries the copyright notice and the licence: each folder's OFL.txt. demo/tools/check_shaders.py holds this list to the folder.",
+  "families": [
+    {
+      "name": "Anton",
+      "folder": "Anton",
+      "designer": "Vernon Adams",
+      "source": "https://github.com/googlefonts/AntonFont",
+      "licence": "OFL.txt",
+      "licenceName": "SIL Open Font License 1.1",
+      "copyright": "Copyright 2020 The Anton Project Authors",
+      "why": "A heavy condensed display face, and first in the list: the plugin's own default (Arial Black, then Arial, Helvetica) is not here, so it starts on the first family.",
+      "files": [
+        {
+          "file": "Anton-Regular.ttf",
+          "bytes": 170812,
+          "sha256": "a4ba3a92350ebb031da0cb47630ac49eb265082ca1bc0450442f4a83ab947cab"
+        }
+      ]
+    },
+    {
+      "name": "Barlow",
+      "folder": "Barlow",
+      "designer": "Jeremy Tribby",
+      "source": "https://github.com/jpt/barlow",
+      "licence": "OFL.txt",
+      "licenceName": "SIL Open Font License 1.1",
+      "copyright": "Copyright 2017 The Barlow Project Authors",
+      "why": "A plain grotesque in five of its faces (Thin, Regular, Italic, Black, Black Italic), so Weight and Italic have something to choose between.",
+      "files": [
+        {
+          "file": "Barlow-Black.ttf",
+          "bytes": 111116,
+          "sha256": "fc4f74e8475b181003f7597450c62d630622b417e367a6842972b286c49f9440"
+        },
+        {
+          "file": "Barlow-BlackItalic.ttf",
+          "bytes": 114596,
+          "sha256": "109ad3b4fff5bfd338d0fbc908e68d601893b97b9b1d8ae698aaab2209f6a618"
+        },
+        {
+          "file": "Barlow-Italic.ttf",
+          "bytes": 109624,
+          "sha256": "70cf45c354af39e55082fd506e748cc6a0a1812949875f99ded3f76bf691e4ca"
+        },
+        {
+          "file": "Barlow-Regular.ttf",
+          "bytes": 104068,
+          "sha256": "95aa02c7c43096e0dd44d787ba6216864a67157e402adab59b35572e0c1577ea"
+        },
+        {
+          "file": "Barlow-Thin.ttf",
+          "bytes": 101704,
+          "sha256": "103671e5a8daf1c02ac2cb35c61fa30088e055e5ff718d51b4fb20012581d252"
+        }
+      ]
+    },
+    {
+      "name": "DM Serif Display",
+      "folder": "DMSerifDisplay",
+      "designer": "Colophon Foundry",
+      "source": "https://github.com/googlefonts/dm-fonts",
+      "licence": "OFL.txt",
+      "licenceName": "SIL Open Font License 1.1",
+      "copyright": "Copyright 2014-2018 Adobe, with Reserved Font Name 'Source'; Copyright 2019 Google LLC",
+      "why": "A high-contrast serif, upright and italic: hairlines next to heavy stems.",
+      "files": [
+        {
+          "file": "DMSerifDisplay-Italic.ttf",
+          "bytes": 71208,
+          "sha256": "df74c0ac387baeaeb0fe4f2324e1668e6a3ed8c09cd9796fe162c71753e19e45"
+        },
+        {
+          "file": "DMSerifDisplay-Regular.ttf",
+          "bytes": 76580,
+          "sha256": "8cc3643535edf039aa5d95440a8542735e9197e4f4b8d9303e980fefbf5ab616"
+        }
+      ]
+    },
+    {
+      "name": "Monoton",
+      "folder": "Monoton",
+      "designer": "Vernon Adams",
+      "source": "https://github.com/google/fonts/tree/main/ofl/monoton",
+      "licence": "OFL.txt",
+      "licenceName": "SIL Open Font License 1.1",
+      "copyright": "Copyright (c) 2011 by Vernon Adams, with Reserved Font Name \"Monoton\"",
+      "why": "An inline display face: each letter drawn as parallel lines with gaps between, sixty-odd pieces a letter where Anton has fifteen.",
+      "files": [
+        {
+          "file": "Monoton-Regular.ttf",
+          "bytes": 51604,
+          "sha256": "951c4cea65ffede784a7c9672feec5d329a7e1e12216c42d53ecf36c90d04dea"
+        }
+      ]
+    }
+  ]
+}
