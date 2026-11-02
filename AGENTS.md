@@ -120,9 +120,9 @@ there is no resolution to run out of: Zoom 1000 is the same shader on smaller nu
   under a US patent. Nothing here comes from it. Don't add its band structures or its
   root-classification scheme to speed this up without checking the patent's current
   status and claims first.
-- **`source/StoatworksAbout.h` and `ATTRIBUTIONS.md` are provisional hand copies** in the
-  generated shape (Knockout isn't in the backend's lists yet). The first sync after it is
-  listed overwrites them, which is what should happen.
+- **`source/StoatworksAbout.h`, `ATTRIBUTIONS.md` and `.github/{FUNDING.yml,ISSUE_TEMPLATE}`
+  are generated** by stoatworks-backend's syncs (registered 2 November 2026). Change the
+  masters there; a hand edit here is overwritten by the next sync.
 - **Private API: none.** Everything is FFGL 2.1 and GL 4.1 core.
 
 ## Not done

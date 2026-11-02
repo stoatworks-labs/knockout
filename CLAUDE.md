@@ -2,7 +2,7 @@
 
 User-defined text as a mask over the clip, for Resolume Arena/Avenue: one FFGL effect,
 drawn per pixel from the font's own curves. C++/GLSL, CMake MODULE → universal `.bundle`
-(macOS); the Windows `.dll` has never been built. MIT.
+(macOS) and an x64 `.dll` (Windows, built by CI and `release.yml`). MIT.
 
 | | id | display name | bundle | type |
 | --- | --- | --- | --- | --- |
@@ -77,7 +77,11 @@ the cubic tolerance, or the order of the parameters (hosts store them by index).
 - `knockout_core` is an OBJECT library: the plugin registers itself from a file-scope
   constructor nothing references.
 - The macOS build must be universal. Check with `lipo`, never the build log.
-- **Provisional, normally generated:** `source/StoatworksAbout.h` is a hand copy in the
-  shape `stoatworks-backend/scripts/sync-about.py` writes, and `ATTRIBUTIONS.md` likewise
-  for `sync-attributions.py`. Once Knockout is in the backend's lists the sync overwrites
-  both; edit there after that, not here.
+- **Generated, do not edit:** `source/StoatworksAbout.h` (`stoatworks-backend/scripts/sync-about.py`,
+  from the website's `projects.json`), `ATTRIBUTIONS.md` (`sync-attributions.py`),
+  `.github/FUNDING.yml` and `.github/ISSUE_TEMPLATE/` (the backend's sync scripts). Edit the
+  masters there.
+- **Releasing:** a `v*` tag runs `release.yml` (universal `.bundle` + `.dmg`, x64 `.dll` +
+  NSIS installer, zips); a dispatch builds the same and publishes nothing, which is the DLL
+  to gate in Arena on win-lab. `wincheck.ps1 -Params` counts the controls plus the About
+  block's text and four buttons (35); change it when either changes.

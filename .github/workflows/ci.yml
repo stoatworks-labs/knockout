@@ -23,7 +23,7 @@ on:
 jobs:
   macos:
     name: macOS
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -119,7 +119,7 @@ jobs:
       - name: The DLL, as a host sees it
         # pwsh checks only the LAST exit code of a step: it is checked here.
         run: |
-          ./tools/wincheck.ps1 -Dll "build/Release/Knockout.dll" -Name "SW Knockout" -Id KO01 -Kind effect -Params 34
+          ./tools/wincheck.ps1 -Dll "build/Release/Knockout.dll" -Name "SW Knockout" -Id KO01 -Kind effect -Params 35
           if( $LASTEXITCODE ) { exit $LASTEXITCODE }
 
       - uses: actions/upload-artifact@v7
