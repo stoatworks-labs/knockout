@@ -51,8 +51,8 @@ demo rather than the plugin, and the page says where the two differ. Its pixels 
 
 | Build | Download | Size |
 | --- | --- | --- |
-| Universal (Apple Silicon + Intel) · .dmg disk image | [`knockout-0.1.0-macos-universal.dmg`](https://github.com/stoatworks-labs/knockout/releases/download/v0.1.0/knockout-0.1.0-macos-universal.dmg) | 588 KB |
-| Universal (Apple Silicon + Intel) · .zip archive | [`knockout-macos-universal.zip`](https://github.com/stoatworks-labs/knockout/releases/latest/download/knockout-macos-universal.zip) | 261 KB |
+| Universal (Apple Silicon + Intel) · .dmg disk image | [`knockout-0.1.0-macos-universal.dmg`](https://github.com/stoatworks-labs/knockout/releases/download/v0.1.0/knockout-0.1.0-macos-universal.dmg) | 326 KB |
+| Universal (Apple Silicon + Intel) · .zip archive | [`knockout-macos-universal.zip`](https://github.com/stoatworks-labs/knockout/releases/latest/download/knockout-macos-universal.zip) | 281 KB |
 
 </details>
 
@@ -68,7 +68,7 @@ demo rather than the plugin, and the page says where the two differ. Its pixels 
 
 All builds, checksums and release notes: [github.com/stoatworks-labs/knockout/releases](https://github.com/stoatworks-labs/knockout/releases).
 
-The Windows builds are unsigned, so SmartScreen warns once.
+macOS builds are signed and notarised and open normally. The Windows builds are unsigned, so SmartScreen warns once.
 
 <!-- downloads:end -->
 
