@@ -1,0 +1,205 @@
+# knockout
+
+> **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
+> (Anthropic), directed and reviewed by a human author. It has **not been loaded into
+> Resolume yet**. oxbow, the fleet's stand-in host, loads the universal bundle, reads it as
+> an effect and renders 120 frames through it. Everything else below is measured by an
+> offline harness that drives the real plugin class in a headless GL context on this Mac's
+> GPU. Every pixel of the mask agrees with the test font's own geometry **within 0.0005**,
+> curves and 40× zooms included. A stroke 1000× zoomed, on the sixteenth letter of a line,
+> at 4K, is still **within 0.0018**. And six faces nobody here drew (TrueType and CFF,
+> upright and italic, two variable fonts with overlapping strokes) match stb_truetype's own
+> rasteriser with no pixel in on one side and out on the other. `kotest --negative` re-runs
+> the checks against eight deliberately wrong models, and `tools/mutate.sh` changes one
+> character of the shipped shaders and code twenty-three times. Every one is caught.
+
+Your words, in any font you have installed, as a mask over the clip, for Resolume
+Arena/Avenue. The clip shows through the letters (**Inside**), or the letters are cut out
+of it (**Outside**), and whatever the mask takes away becomes transparent, black, white or
+a colour of your choosing. One FFGL effect: **SW Knockout**.
+
+The letters aren't a picture of the text. Every frame, every pixel asks the font's own
+curves whether it's inside a letter and how far from the edge, so a word stays sharp
+whether it fills the frame or you've zoomed a thousand times into one stroke of it.
+
+![Four frames from Resolume's own clips: KNOCKOUT in Arial Black with a light tunnel showing through the letters on black; LIVE in orange Futura Bold cut out of a circuit-board city; Last Orders in outlined Didot Italic over machinery; and a fifty-times zoom into the tail of a Didot R, its curve still clean at the edge](docs/hero.png)
+
+<sub>Rendered by the plugin's offline harness (`kotest`) over frames of Resolume's
+*Beat 002*, *Beat 004*, *Beat 006* and *Beat 001*, not captured from Resolume. The
+defaults on Black; Outside on Colour in Futura Bold; Didot Italic with Outline; and
+Didot's R at Zoom 50 about its tail.</sub>
+
+## The one idea
+
+A glyph in a font is a handful of curves. The plugin sends each glyph's curves to the GPU
+once, and then draws one rectangle per letter on the screen. Every pixel in that rectangle
+works out two things from the curves directly: whether it's inside the letter (a ray to
+the right, counting the curves it crosses and which way they go, as TrueType and CFF fill
+their outlines), and how far it is from the nearest edge, exactly, in pixels. Inside and
+distance together give the mask: a one-pixel ramp across the edge, so it's antialiased at
+any size, and **Grow**, **Feather** and **Outline** are the same ramp moved, widened or
+folded into a stroke.
+
+No atlas, so nothing to run out of resolution. Zoom is handled in double precision on the
+CPU and the shader only ever works with numbers near the middle of the screen, which is
+why the thousandth zoom into the end of a long line still lands where it should (`--zoom`).
+
+Letters whose strokes overlap, as a variable font's default instance usually does, are
+cleaned up when the font loads: the bits of outline that sit inside another stroke still
+count towards inside and out, but not towards the edge, so a filled letter has no seam and
+an outlined one has no stroke through the middle of its crossbar (`--overlap`).
+
+## Fonts
+
+- **Font** lists the families on this machine when the plugin loads; **Font Name** is the
+  same choice by name, and the name is what a composition remembers. Type a name and it
+  wins over the list (any case). Open a composition on a machine without that font and the
+  name is kept as typed while the plugin draws in its default, Arial Black, until you pick
+  something else.
+- **Weight** and **Italic** pick a face from the family the way a browser does: the nearest
+  weight it has (500 looks down before up, above 500 looks up first, below 400 looks down),
+  and an italic before a weight.
+- **Font File** takes a `.ttf`, `.otf`, `.ttc` or `.otc` from anywhere and overrides the
+  lot. That's also the way in to the faces macOS keeps out of font menus (their names start
+  with a dot, like New York's `.New York`).
+- TrueType and CFF outlines are both read. CFF's cubic curves become quadratics within
+  2e-5 em of the originals.
+
+What isn't there: any shaping. Letters are placed one after another with the font's
+advances and kerning pairs, so Latin, Greek and Cyrillic are fine, ligatures don't happen,
+and Arabic, the Indic scripts and anything else that needs its letters joined or reordered
+will come out as a row of the wrong shapes. Faces whose glyphs are bitmaps (Apple Color
+Emoji) and CFF2 variable fonts are left out of the list, because there are no curves to
+read.
+
+In the **Text** field, `\n` starts a new line (so does a real line break, if your host
+lets you type one) and `\\` is a backslash. Up to 4096 characters are drawn.
+
+## Controls
+
+- **Text:** Text, Font, Font Name, Font File, Weight (*Thin* to *Black*), Italic.
+- **Layout:** Fit (*Frame*, *Width*, *Height*: the text scaled to fill it, less Margin;
+  *Size*: Size sets the em, 0.02 to 2 frame heights), Size, Margin (0 to 0.45 of the frame
+  on each side), Align (*Left*, *Centre*, *Right*, between lines), Tracking (−0.2 to
+  +0.6 em between letters), Line Spacing (0.5 to 2 lines).
+- **Transform:** Position X and Y (±1 frame), Rotation (±180°), Zoom (1 to 1000 times),
+  Zoom X and Y (where on the frame the zoom is centred).
+- **Edge:** Grow (±0.1 em, the outline pushed out or pulled in), Feather (up to 0.1 frame
+  heights of soft edge), Outline (0 for filled letters, up to 0.2 em of stroke centred on
+  the outline).
+- **Reveal:** Reveal (0 nothing, 1 everything), Reveal Spread (0 one letter at a time,
+  1 every letter fading together), Reveal Order (*Forward*, *Backward*, *Centre Out*,
+  *Random*). Put Reveal on a Resolume envelope or the BPM and the text writes itself on.
+- **Mask:** Mask (*Inside*, *Outside*), Background (*Transparent*, *Black*, *White*,
+  *Colour*), Colour, Mix (0 hands back the clip untouched, to the bit).
+
+The default is the word KNOCKOUT in Arial Black, filling the frame, with the clip showing
+through it on transparency.
+
+## Status
+
+**v0.1.0, unreleased.**
+
+### Measured offline, on macOS
+
+`tools/verify.sh` passes on this machine (Apple M4 Max, macOS 26.4.1) against a fresh
+universal Release build (2 November 2026). The checks run on four test fonts that
+`tools/make-test-font.py` writes, whose every glyph is a shape the harness knows exactly:
+squares, a square with a square hole, two bars crossing, triangles, and a disc of eight
+quadratics. What they establish:
+
+| check | result |
+| --- | --- |
+| `--coverage` | twelve settings (lines, alignment, tracking, rotation, zoom about a point, all at once, the disc's curves, 40× onto a curve) at two rasters: every pixel within **0.0005** of the coverage the shapes predict |
+| `--zoom` | an edge at 10×, 100× and 1000×, and the sixteenth letter of a line at 1000× at 4K, within **0.0018** (a float version of the same arithmetic is out by 0.037) |
+| `--edge` | Grow, Feather and Outline within **0.0005**; Grow ±0.05 em changes an H's width by 0.1 em to within **0.0005 px**; Feather keeps the edge where it was; strokes of 0.3 to 2 px draw the ink the ramp predicts |
+| `--overlap`, `--winding` | crossing strokes draw as one shape: no seam filled, no stroke inside outlined; O's hole empty, X's doubled middle full |
+| `--layout`, `--fit`, `--transform` | advances, kerning, tracking, three alignments to **0** font units; each Fit to **0.02 px**; Position, Rotation and Zoom to **0.01 px** and **0.05°** |
+| `--reveal` | all four orders at three Spreads: each letter's alpha exactly as the formula, the picture within **0.0005**; Random the same order in every instance |
+| `--composite` | Inside and Outside on each Background, at Mix 1, ½ and 0, within **6e-8**; Mix 0 the clip bit for bit |
+| `--fonts`, `--text` | weight matching, italic, Font Name over the list, Font File over both, a missing name kept; escapes, empty text, 5000 characters |
+| `--stb` | the test fonts against stb_truetype's rasteriser: no pixel in on one side and out on the other, area within **0.013%** |
+| `--state`, `--resize` | the host's GL state comes back as it went in; a new raster under a running instance |
+| `--controls` | all **30** controls change the picture |
+| `--real` | this Mac's fonts: Arial Black, Helvetica, STIXGeneral (CFF) upright and italic, the system font and New York (both variable, with 43 and 32 overlapping pieces) against stb_truetype at 720p: no hard disagreement, area within **0.1%** |
+| `--negative` | **8** deliberately wrong models (even-odd fill, distance to every piece, a two-pixel ramp, no kerning, Grow inverted, overlaps left in, the centre in float, the harness's own rotation backwards), **8** caught |
+| mutation | **23** one-character mutants of the shipped GLSL and C++, **23** caught |
+| shaders | all 4 compile through `glslc`, not merely through Apple's driver |
+| software renderer | every check above but `--real` passes again on Apple's software renderer |
+| the bundle | universal (`x86_64 arm64`), exports `plugMain`, ad-hoc signs; `oxbow` reports `SW Knockout` / `KO01` / `effect` and renders 120 frames through it |
+
+Cost on the same Mac, GPU finished: the defaults take 0.13 ms a frame at 1080p and 0.57 ms
+at 4K; eight lines of 56 characters 0.29 ms and 0.77 ms; a word zoomed 1000× into a stroke
+0.46 ms and 1.73 ms (`kotest --system-fonts --bench`).
+
+### In Resolume
+
+Not yet. Nothing above has run inside Arena or Avenue.
+
+### On Windows
+
+Never built. The CMake, the font directories and GLEW from vcpkg are there for it, and
+that is all that can be said.
+
+### Known limits
+
+- **No shaping** (see Fonts): scripts that join or reorder their letters come out wrong.
+- **Hairlines get heavier rather than fainter.** An Outline thinner than a pixel draws
+  (1 + w)² / 4 px of ink, not w: 0.42 px for a 0.3 px stroke. That's the one-pixel ramp
+  doing what it does at both edges at once, and it's measured (`--edge`).
+- **CFF curves are approximated** by quadratics, within 2e-5 em: under 0.05 px even for
+  a letter filling a 4K frame. Zoom multiplies it, so at Zoom 1000 a CFF curve can sit
+  tens of pixels off the designer's. It's still a smooth curve; it's just not quite theirs.
+  TrueType fonts are quadratics already and have no such error.
+- **A face is read once per load.** Install a font while Resolume is running and it
+  appears in the list next time the plugin loads; Font File reaches it in the meantime.
+
+## Build
+
+Needs CMake 3.15+, a C++17 compiler and the FFGL SDK submodule:
+
+```bash
+git submodule update --init --recursive
+```
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+```
+
+```bash
+cmake --build build -j8
+```
+
+```bash
+cmake --install build
+```
+
+The last one puts `Knockout.bundle` into `~/Documents/Resolume Arena/Extra Effects`. The
+macOS build is universal (Apple Silicon and Intel). On Windows, GLEW would come from vcpkg
+(`vcpkg.json`).
+
+## Building and testing
+
+The harness is `build/kotest`. It renders through the real plugin class:
+
+```bash
+./build/kotest --system-fonts --out /tmp/frame.png --set "Text=Hello" --set "Font Name=Futura"
+```
+
+```bash
+tools/verify.sh
+```
+
+`tools/verify.sh` is everything: shader hygiene, `glslc`, the test fonts checked against
+their script, a fresh universal build with no warnings, the bundle through `lipo`, its
+plist and oxbow, every check on this GPU and again on Apple's software renderer, this
+Mac's own fonts, the pipe, the negative controls, the mutants and the bench. `CLAUDE.md`
+lists what each check measures; `AGENTS.md` says why the plugin is built the way it is.
+
+## License
+
+MIT. See [LICENSE](LICENSE) and [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
+
+<!-- attributions:start -->
+This project is built on other people's work — see [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
+<!-- attributions:end -->
