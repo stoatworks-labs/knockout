@@ -32,6 +32,24 @@ whether it fills the frame or you've zoomed a thousand times into one stroke of 
 defaults on Black; Outside on Colour in Futura Bold; Didot Italic with Outline; and
 Didot's R at Zoom 50 about its tail.</sub>
 
+**[Try it in your browser](https://knockout-demo.stoatworks-labs.com)**: the plugin's own C++
+compiled to WebAssembly, drawing with its own shaders in WebGL2, every control there. A web
+page can't see your fonts, so it brings four of its own (Anton, Barlow, DM Serif Display and
+Monoton, all under the OFL), and Font File takes one of yours without uploading it. It's a
+demo rather than the plugin, and the page says where the two differ. Its pixels agree with
+`kotest`'s, given the same fonts and clip, to within one level in 255
+(`demo/tools/crosscheck/`).
+
+## Video
+
+[![Knockout: your words as a mask over the clip, in any font, for Resolume](docs/video-thumb.png)](https://www.youtube.com/watch?v=HTvyaKAG3Vc)
+
+*[Watch it](https://www.youtube.com/watch?v=HTvyaKAG3Vc), 89 seconds: Inside and Outside on
+each Background, Didot Italic to Chalkduster and Avenir Next's six weights, Grow, Feather and
+Outline, two lines with Align, Tracking and Rotation, both Reveals, and a zoom from 1× to
+1000× into the tip of the K's arm. Every frame is the plugin's own output, rendered by
+`kotest` over Resolume's demo clips, not captured from Resolume.*
+
 ## The one idea
 
 A glyph in a font is a handful of curves. The plugin sends each glyph's curves to the GPU

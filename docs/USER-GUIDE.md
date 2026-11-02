@@ -65,6 +65,12 @@ uninstaller in a `Knockout` folder beside it, where Resolume pays them no attent
 first. It isn't code-signed, so it trips SmartScreen once: **More info** → **Run anyway**. Or skip
 the installer, take `Knockout.dll` out of the `.zip` and drop it into the folder by hand.
 
+To try it before installing anything, there's a
+[browser demo](https://knockout-demo.stoatworks-labs.com): the plugin's own C++ compiled to
+WebAssembly, drawing with its own shaders, with every control. A web page can't see your fonts,
+so it brings four of its own, and its Font File takes one of yours without uploading it. It's a
+demo rather than the plugin, and the page says where the two differ.
+
 ---
 
 ## Start here
